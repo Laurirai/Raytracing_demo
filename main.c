@@ -31,6 +31,6 @@ int main(int argc, char *argv[]) {
     SDL_FillRect(screen, &rectangle, COLOR_WHITE);
     SDL_UpdateWindowSurface(window);
 
-    SDL_Delay(5000); // testing for screen to b up
+    SDL_Delay(5000); // testing for screen to be up
     return 0;
 }
