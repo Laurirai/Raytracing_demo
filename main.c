@@ -39,7 +39,7 @@ void drawCircle(SDL_Surface *surface, struct Circle circle, Uint32 color) {
         }
     }
 }
-
+// n. 33m
 int main(int argc, char *argv[]) {
     SDL_Init(SDL_INIT_EVERYTHING);
     SDL_Window *window = SDL_CreateWindow( //Creating our "screen"
