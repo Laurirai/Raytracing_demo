@@ -6,6 +6,8 @@
 #define SCREEN_HEIGHT 720
 #define COLOR_WHITE 0xffffffff
 #define COLOR_TONED_YELLOW 0xFFFFE600
+#define COLOR_BLACK 0x00000000
+#define AMOUNT_OF_RAYS 200
 
 
 // creating a struct for our circles for easier time to pass argument into functions
@@ -15,9 +17,19 @@ struct Circle {
     double radius;
 };
 
+struct Ray {
+    double x;
+    double y;
+    double angle;
+    double x_start;
+    double y_start;
+    double x_end;
+    double y_end;
+};
+
 // to draw a circle
 // we pass arguments as follows: surface for the screen we are going to draw on
-// struct circle for all values of circle (x,y,r)
+// struct circle for all values of circle (x,y,radius)
 // and finally color to color the drawn pixels
 // all calculations are done without sqrt just to save computing power and since the exact values arent important
 // we could do it by calculating the actual distance using sqrt on the values. (sqrt is very expensive to use)
@@ -39,7 +51,29 @@ void drawCircle(SDL_Surface *surface, struct Circle circle, Uint32 color) {
         }
     }
 }
-// n. 33m
+
+void generate_rays(struct Circle circle, struct Ray rays[AMOUNT_OF_RAYS], double ray_length) {
+    for (int i = 0; i < AMOUNT_OF_RAYS; i++) {
+        double angle = (2 * M_PI * i) / AMOUNT_OF_RAYS;  // Convert index to radians
+
+        rays[i].angle = angle;
+        rays[i].x_start = circle.x;
+        rays[i].y_start = circle.y;
+
+        // Calculate the end point using trigonometry
+        rays[i].x_end = circle.x + cos(angle) * ray_length;
+        rays[i].y_end = circle.y + sin(angle) * ray_length;
+    }
+}
+// n. 1,06,35
+void draw_rays(SDL_Renderer *renderer,struct Circle circle, struct Ray rays[AMOUNT_OF_RAYS]) {
+    SDL_SetRenderDrawColor(renderer, 255, 255, 0, 255);  // Yellow for light
+
+    for (int i = 0; i < AMOUNT_OF_RAYS; i++) {
+        SDL_RenderDrawLine(renderer, rays[i].x_start, rays[i].y_start, rays[i].x_end, rays[i].y_end);
+    }
+}
+
 int main(int argc, char *argv[]) {
     SDL_Init(SDL_INIT_EVERYTHING);
     SDL_Window *window = SDL_CreateWindow( //Creating our "screen"
@@ -53,20 +87,38 @@ int main(int argc, char *argv[]) {
     SDL_Surface *screen = SDL_GetWindowSurface(window);// retrieving the surface and saving it to a pointer
 
     struct Circle light_source = {200, 200, 50}; // creating the "light" source circle with the struct
-    struct Circle our_object = {900, 350, 50}; // creating our "object" circle with same struct
+    struct Circle our_object = {900, 350, 100}; // creating our "object" circle with same struct
+    struct Ray rays[AMOUNT_OF_RAYS];
+    // Creating a rectangle which is the size of the screen. Whilst this rect will fill the screen,
+    // it will be "erasing" what's on the screen
+    SDL_Rect erasing_rectangle = {0, 0, SCREEN_WIDTH, SCREEN_HEIGHT};
+    SDL_Renderer *renderer = SDL_CreateRenderer(window, -1, 0);
+    double ray_length = sqrt(SCREEN_WIDTH * SCREEN_WIDTH + SCREEN_HEIGHT * SCREEN_HEIGHT);
 
     int is_running = 1;
     SDL_Event event;
-    while (is_running) {
-        while (SDL_PollEvent(&event)) {
-            if (event.type == SDL_QUIT) {
-                is_running = 0;
+    while (is_running) { // this will be the main loop running the program
+        while (SDL_PollEvent(&event)) { // this loop whill check on all the events
+            if (event.type == SDL_QUIT) { // if the top right x is clicked
+                is_running = 0; // we close the program
+            }
+            // if mouse is moving and the mouse button is pressed
+            if (event.type == SDL_MOUSEMOTION && event.motion.state != 0) {
+                light_source.x = event.motion.x; // we move the x and y coordinate of the circle according to the mouse's coordinates
+                light_source.y = event.motion.y;
             }
         }
-        drawCircle(screen, light_source, COLOR_TONED_YELLOW);
-        drawCircle(screen, our_object, COLOR_WHITE);
-        SDL_UpdateWindowSurface(window);
-        SDL_Delay(10);
+
+        // we will be looping over and over these
+        SDL_FillRect(screen, &erasing_rectangle, COLOR_BLACK); // every loop will start on drawing the black screen,
+        drawCircle(screen, light_source, COLOR_TONED_YELLOW); // drawing the light source
+        drawCircle(screen, our_object, COLOR_WHITE); // drawing the object
+
+        generate_rays(light_source, rays, ray_length);
+        draw_rays(renderer, our_object, rays);
+        SDL_UpdateWindowSurface(window); // while they've been drawn, they are just being drawn in memory, we have to
+        // update the screen in order to see the drawn results
+        SDL_Delay(10); // around 100 fps depending on performance
 
     }
     return 0;
