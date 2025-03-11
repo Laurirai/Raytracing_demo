@@ -112,6 +112,7 @@ void draw_rays(SDL_Surface *surface, struct Ray rays[AMOUNT_OF_RAYS], Uint32 col
     }
 }
 
+// n. 1.27.30
 int main(int argc, char *argv[]) {
     SDL_Init(SDL_INIT_EVERYTHING);
     SDL_Window *window = SDL_CreateWindow( //Creating our "screen"
