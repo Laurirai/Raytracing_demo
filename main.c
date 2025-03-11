@@ -18,13 +18,9 @@ struct Circle {
 };
 
 struct Ray {
-    double x;
-    double y;
     double angle;
     double x_start;
     double y_start;
-    double x_end;
-    double y_end;
 };
 
 // to draw a circle
@@ -52,25 +48,38 @@ void drawCircle(SDL_Surface *surface, struct Circle circle, Uint32 color) {
     }
 }
 
-void generate_rays(struct Circle circle, struct Ray rays[AMOUNT_OF_RAYS], double ray_length) {
+void generate_rays(struct Circle circle, struct Ray rays[AMOUNT_OF_RAYS]) {
     for (int i = 0; i < AMOUNT_OF_RAYS; i++) {
-        double angle = (2 * M_PI * i) / AMOUNT_OF_RAYS;  // Convert index to radians
-
-        rays[i].angle = angle;
-        rays[i].x_start = circle.x;
-        rays[i].y_start = circle.y;
-
-        // Calculate the end point using trigonometry
-        rays[i].x_end = circle.x + cos(angle) * ray_length;
-        rays[i].y_end = circle.y + sin(angle) * ray_length;
+        double angle = ((double) i / AMOUNT_OF_RAYS) * 2 * M_PI;
+        struct Ray ray = { circle.x, circle.y, angle };
+        rays[i] = ray;
     }
 }
 // n. 1,06,35
-void draw_rays(SDL_Renderer *renderer,struct Circle circle, struct Ray rays[AMOUNT_OF_RAYS]) {
-    SDL_SetRenderDrawColor(renderer, 255, 255, 0, 255);  // Yellow for light
+void draw_rays(SDL_Surface *surface, struct Ray rays[AMOUNT_OF_RAYS], Uint32 color) {
 
     for (int i = 0; i < AMOUNT_OF_RAYS; i++) {
-        SDL_RenderDrawLine(renderer, rays[i].x_start, rays[i].y_start, rays[i].x_end, rays[i].y_end);
+        struct Ray ray = rays[i];
+        int end_of_screen = 0;
+        int hit_object = 0;
+        double step = 1;
+        double draw_x_pixel = ray.x_start;
+        double draw_y_pixel = ray.y_start;
+
+        while (!end_of_screen && !hit_object) {
+            draw_x_pixel += step*cos(ray.angle);
+            draw_y_pixel += step*sin(ray.angle);
+
+            SDL_Rect pixel = (SDL_Rect) {draw_x_pixel,draw_y_pixel,1,1};
+            SDL_FillRect(surface, &pixel, color);
+
+            if (draw_x_pixel < 0 || draw_x_pixel > SCREEN_WIDTH) {
+                end_of_screen = 1;
+            }
+            if (draw_y_pixel < 0 || draw_y_pixel > SCREEN_HEIGHT) {
+                end_of_screen = 1;
+            }
+        }
     }
 }
 
@@ -92,7 +101,7 @@ int main(int argc, char *argv[]) {
     // Creating a rectangle which is the size of the screen. Whilst this rect will fill the screen,
     // it will be "erasing" what's on the screen
     SDL_Rect erasing_rectangle = {0, 0, SCREEN_WIDTH, SCREEN_HEIGHT};
-    SDL_Renderer *renderer = SDL_CreateRenderer(window, -1, 0);
+
     double ray_length = sqrt(SCREEN_WIDTH * SCREEN_WIDTH + SCREEN_HEIGHT * SCREEN_HEIGHT);
 
     int is_running = 1;
@@ -106,6 +115,7 @@ int main(int argc, char *argv[]) {
             if (event.type == SDL_MOUSEMOTION && event.motion.state != 0) {
                 light_source.x = event.motion.x; // we move the x and y coordinate of the circle according to the mouse's coordinates
                 light_source.y = event.motion.y;
+                generate_rays(light_source, rays);
             }
         }
 
@@ -114,8 +124,8 @@ int main(int argc, char *argv[]) {
         drawCircle(screen, light_source, COLOR_TONED_YELLOW); // drawing the light source
         drawCircle(screen, our_object, COLOR_WHITE); // drawing the object
 
-        generate_rays(light_source, rays, ray_length);
-        draw_rays(renderer, our_object, rays);
+        generate_rays(light_source, rays);
+        draw_rays(screen, rays, COLOR_TONED_YELLOW);
         SDL_UpdateWindowSurface(window); // while they've been drawn, they are just being drawn in memory, we have to
         // update the screen in order to see the drawn results
         SDL_Delay(10); // around 100 fps depending on performance
