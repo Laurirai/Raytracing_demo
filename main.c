@@ -17,6 +17,7 @@ struct Circle {
     double radius;
 };
 
+// creating a struct for our rays for easier time to pass argument into functions
 struct Ray {
     double angle;
     double x_start;
@@ -48,14 +49,42 @@ void drawCircle(SDL_Surface *surface, struct Circle circle, Uint32 color) {
     }
 }
 
+// we need to generate angles for the rays depending on the position of the circle
+// we get the circle as argument to know where it is
+// we get the rays as an array with the structure of the rays
+// then we loop over the rays in the array
+// i / amount of rays to generate the angles between 360
+// 2*pi to convert the fraction number to radians. since 360 = 2pi rad
+// then we create a new ray using the structure
+// and finally store the ray
 void generate_rays(struct Circle circle, struct Ray rays[AMOUNT_OF_RAYS]) {
     for (int i = 0; i < AMOUNT_OF_RAYS; i++) {
         double angle = ((double) i / AMOUNT_OF_RAYS) * 2 * M_PI;
-        struct Ray ray = { circle.x, circle.y, angle };
+        struct Ray ray = { angle, circle.x, circle.y };
         rays[i] = ray;
     }
 }
-// n. 1,06,35
+
+// to draw the actual rays
+// we pass surface to get the "surface" we are drawing on
+// we pass the array of rays where each ray has starting position and the angle
+// and finally the color we want the rays to b
+// then we loop over the array
+// then we initialize the variables
+// end of screen flag to indicate when ray has moved beyond the screen
+// hit object flag to check if ray has struck an object
+// step is the definition of how much the ray is moving
+// 1 step = ray advances 1 pixel at a time
+// while loop checks if the ray is passed the screen and if it has touched the object
+// then we increment the position
+// draw_x_pixel += step*cos(ray.angle); this advances the x coordinate based on cosine of rays angle
+// draw_y_pixel += step*sin(ray.angle); this advances the y coordinate based on sine of the rays angle
+// then we just draw the given pixel
+// then we check if the rays are out of bounds
+// since the origin of sdl coordinate is 0,0 and thats at the top left corner
+// draw_x_pixel < 0 // this will check the left side of the screen
+// draw_x_pixel > SCREEN_WIDTH // this will check the right side of the screen
+// same for the y coordinate
 void draw_rays(SDL_Surface *surface, struct Ray rays[AMOUNT_OF_RAYS], Uint32 color) {
 
     for (int i = 0; i < AMOUNT_OF_RAYS; i++) {
