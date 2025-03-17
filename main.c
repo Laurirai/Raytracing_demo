@@ -85,8 +85,9 @@ void generate_rays(struct Circle circle, struct Ray rays[AMOUNT_OF_RAYS]) {
 // draw_x_pixel < 0 // this will check the left side of the screen
 // draw_x_pixel > SCREEN_WIDTH // this will check the right side of the screen
 // same for the y coordinate
-void draw_rays(SDL_Surface *surface, struct Ray rays[AMOUNT_OF_RAYS], Uint32 color) {
+void draw_rays(SDL_Surface *surface, struct Ray rays[AMOUNT_OF_RAYS], Uint32 color, struct Circle object_circle) {
 
+    double radius_squared = object_circle.radius * object_circle.radius;
     for (int i = 0; i < AMOUNT_OF_RAYS; i++) {
         struct Ray ray = rays[i];
         int end_of_screen = 0;
@@ -99,6 +100,8 @@ void draw_rays(SDL_Surface *surface, struct Ray rays[AMOUNT_OF_RAYS], Uint32 col
             draw_x_pixel += step*cos(ray.angle);
             draw_y_pixel += step*sin(ray.angle);
 
+            double distance_from_object_center_squared = pow(draw_x_pixel - object_circle.x, 2) + pow(draw_y_pixel - object_circle.y, 2);
+
             SDL_Rect pixel = (SDL_Rect) {draw_x_pixel,draw_y_pixel,1,1};
             SDL_FillRect(surface, &pixel, color);
 
@@ -107,6 +110,15 @@ void draw_rays(SDL_Surface *surface, struct Ray rays[AMOUNT_OF_RAYS], Uint32 col
             }
             if (draw_y_pixel < 0 || draw_y_pixel > SCREEN_HEIGHT) {
                 end_of_screen = 1;
+            }
+            // to check that the ray has hit an object
+            // we calculate the distance from current ray's position to the object's center
+            // we calculate the radius of the object
+            // and if the distance is smaller than radius, the ray is inside the circle
+            // then we set hit_object to 1 to stop drawing the ray any further
+            // we calculate in squared to save computing power
+            if (distance_from_object_center_squared < radius_squared) {
+                hit_object = 1;
             }
         }
     }
@@ -155,7 +167,7 @@ int main(int argc, char *argv[]) {
         drawCircle(screen, our_object, COLOR_WHITE); // drawing the object
 
         generate_rays(light_source, rays);
-        draw_rays(screen, rays, COLOR_TONED_YELLOW);
+        draw_rays(screen, rays, COLOR_TONED_YELLOW, our_object);
         SDL_UpdateWindowSurface(window); // while they've been drawn, they are just being drawn in memory, we have to
         // update the screen in order to see the drawn results
         SDL_Delay(10); // around 100 fps depending on performance
