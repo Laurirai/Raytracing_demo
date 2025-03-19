@@ -1,3 +1,12 @@
+/*
+ * MIT License
+ *
+ * Copyright (c) 2025 Lauri Räisänen
+ *
+ * Permission is hereby granted, free of charge...
+*/
+
+
 #include <stdio.h>
 #include <SDL.h>
 #include <math.h>
