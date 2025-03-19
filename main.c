@@ -4,6 +4,7 @@
  * Copyright (c) 2025 Lauri Räisänen
  *
  * Permission is hereby granted, free of charge...
+ * see the licence in license file for more details...
 */
 
 
